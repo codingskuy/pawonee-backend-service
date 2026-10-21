@@ -1,0 +1,60 @@
+name: Schemathesis (manual)
+
+# Uji properti terhadap docs/api/openapi.yaml. Hanya dijalankan manual (workflow_dispatch):
+# memakan beberapa menit dan tidak boleh menahan PR. Lihat ADR-0002.
+on:
+  workflow_dispatch:
+    inputs:
+      maks_contoh:
+        description: Jumlah contoh maksimum per operasi
+        default: '25'
+        required: false
+      fase:
+        description: Fase Schemathesis (dipisah koma)
+        default: examples,coverage,fuzzing,stateful
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  schemathesis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pawonee_st
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/pawonee_st
+      RESET_DB: '1'
+      MAKS_CONTOH: ${{ inputs.maks_contoh }}
+      FASE: ${{ inputs.fase }}
+      # Telemetry alat uji dimatikan; tidak ada data keluar ke layanan eksternal.
+      SCHEMATHESIS_TELEMETRY: 'off'
+      E2E_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Siapkan Rust 1.82.0
+        run: rustup toolchain install 1.82.0 --profile minimal && rustup default 1.82.0
+      - name: Jalankan Schemathesis
+        run: scripts/uji-schemathesis.sh
+      - name: Unggah laporan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laporan-schemathesis
+          path: target/schemathesis/
+          retention-days: 14
