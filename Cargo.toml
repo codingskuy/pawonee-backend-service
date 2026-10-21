@@ -21,9 +21,12 @@ serde_json = { version = "=1.0.133" }
 tower-http = { version = "0.6.1", features = ["cors", "trace", "timeout"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1", features = ["v7", "serde"] }
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
 validator = { version = "0.19", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = "9"
+argon2 = { version = "0.5", features = ["std"] }
+sha2 = "0.10"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

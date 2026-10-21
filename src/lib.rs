@@ -1,6 +1,7 @@
 //! Pawonee backend: API resep, rekomendasi, stok, dan profil di atas DB logis `pawonee`.
 //! Selaras dengan modul `:shared:pantry-resep` milik Pawonee.
 
+pub mod auth;
 pub mod config;
 pub mod db;
 pub mod error;

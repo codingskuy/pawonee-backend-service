@@ -8,6 +8,8 @@ pub struct Config {
     pub alamat: SocketAddr,
     /// Batas waktu per permintaan (detik).
     pub timeout_detik: u64,
+    /// Rahasia penandatangan JWT (minimal 32 karakter).
+    pub jwt_rahasia: String,
 }
 
 impl Config {
@@ -22,10 +24,16 @@ impl Config {
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(15);
+        let jwt_rahasia =
+            std::env::var("JWT_RAHASIA").map_err(|_| "JWT_RAHASIA belum diatur".to_string())?;
+        if jwt_rahasia.len() < 32 {
+            return Err("JWT_RAHASIA minimal 32 karakter".into());
+        }
         Ok(Self {
             database_url,
             alamat,
             timeout_detik,
+            jwt_rahasia,
         })
     }
 }
