@@ -40,6 +40,13 @@ impl AppError {
         }
     }
 
+    pub fn validasi_banyak(rinci: Vec<Rinci>) -> Self {
+        Self::Validasi {
+            pesan: "Parameter tidak valid.".into(),
+            rinci,
+        }
+    }
+
     pub fn kode(&self) -> &'static str {
         match self {
             Self::Validasi { .. } => "VALIDASI_GAGAL",

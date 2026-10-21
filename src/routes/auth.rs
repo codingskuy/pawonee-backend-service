@@ -2,6 +2,7 @@
 
 use crate::{
     auth::{refresh, sandi},
+    ekstrak::JsonValid,
     AppError, AppResult, AppState,
 };
 use axum::{extract::State, Json};
@@ -38,7 +39,7 @@ fn hash_tiruan() -> &'static str {
 
 pub async fn login(
     State(s): State<AppState>,
-    Json(m): Json<Login>,
+    JsonValid(m): JsonValid<Login>,
 ) -> AppResult<Json<Data<refresh::TokenPasangan>>> {
     if m.id_pengguna.trim().is_empty() || m.id_pengguna.len() > 128 {
         return Err(AppError::validasi(
@@ -86,7 +87,7 @@ pub async fn login(
 
 pub async fn refresh(
     State(s): State<AppState>,
-    Json(m): Json<Refresh>,
+    JsonValid(m): JsonValid<Refresh>,
 ) -> AppResult<Json<Data<refresh::TokenPasangan>>> {
     if m.refresh_token.is_empty() || m.refresh_token.len() > 256 {
         return Err(AppError::validasi("refreshToken", "wajib diisi"));

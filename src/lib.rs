@@ -4,7 +4,12 @@
 pub mod auth;
 pub mod config;
 pub mod db;
+pub mod domain;
+pub mod dto;
+pub mod ekstrak;
 pub mod error;
+pub mod event;
+pub mod klien;
 pub mod routes;
 pub mod state;
 

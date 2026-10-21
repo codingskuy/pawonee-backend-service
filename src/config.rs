@@ -10,6 +10,9 @@ pub struct Config {
     pub timeout_detik: u64,
     /// Rahasia penandatangan JWT (minimal 32 karakter).
     pub jwt_rahasia: String,
+    /// Basis URL adaptor stok Pedaree (opsional; tanpa ini `GET /stok` membalas 502).
+    pub pedaree_basis: Option<String>,
+    pub pedaree_kunci_layanan: Option<String>,
 }
 
 impl Config {
@@ -34,6 +37,12 @@ impl Config {
             alamat,
             timeout_detik,
             jwt_rahasia,
+            pedaree_basis: std::env::var("PEDAREE_BASE_URL")
+                .ok()
+                .filter(|v| !v.is_empty()),
+            pedaree_kunci_layanan: std::env::var("PEDAREE_SERVICE_KEY")
+                .ok()
+                .filter(|v| !v.is_empty()),
         })
     }
 }
