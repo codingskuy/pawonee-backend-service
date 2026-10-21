@@ -15,7 +15,10 @@ async fn json(resp: axum::response::Response) -> serde_json::Value {
 
 #[sqlx::test(migrations = "./migrations")]
 async fn kesehatan_mengembalikan_baik_dan_v1(pool: PgPool) {
-    let app = routes::router(AppState::baru(pool), 5);
+    let app = routes::router(
+        AppState::baru(pool, "rahasia-uji-yang-cukup-panjang-123456"),
+        5,
+    );
     let resp = app
         .oneshot(Request::get("/v1/kesehatan").body(Body::empty()).unwrap())
         .await

@@ -19,7 +19,7 @@ async fn main() {
         .expect("koneksi database pawonee gagal");
     db::migrasi(&pool).await.expect("migrasi gagal");
 
-    let app = routes::router(AppState::baru(pool), cfg.timeout_detik);
+    let app = routes::router(AppState::baru(pool, &cfg.jwt_rahasia), cfg.timeout_detik);
     let pendengar = tokio::net::TcpListener::bind(cfg.alamat)
         .await
         .expect("bind gagal");
