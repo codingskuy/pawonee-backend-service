@@ -296,7 +296,7 @@ paths:
       tags: [Stok]
       operationId: bacaStok
       summary: Baca stok keluarga dari Pedaree
-      description: Proksi baca ke Pedaree inventori (cache 60 detik). Bila Pedaree mati, jawaban memakai data tersimpan dengan header `X-Data-Usang true`. Pawonee tidak mengubah stok.
+      description: "Proksi baca ke Pedaree inventori (cache 60 detik). Bila Pedaree mati, jawaban memakai data tersimpan dengan header `X-Data-Usang: true`; tanpa data tersimpan → `502 JARINGAN_GAGAL`. Pengguna/perangkat hanya boleh membaca keluarganya sendiri; service key memerlukan cakupan `stok:baca`. Pawonee tidak mengubah stok."
       security:
         - bearerAuth: []
         - deviceKey: []
@@ -337,6 +337,8 @@ paths:
           $ref: '#/components/responses/BatasLaju'
         '500':
           $ref: '#/components/responses/KesalahanServer'
+        '502':
+          $ref: '#/components/responses/JaringanGagal'
   /profil/{idKeluarga}:
     put:
       tags: [Profil]
@@ -344,7 +346,9 @@ paths:
       summary: Simpan profil keluarga (idempoten)
       description: |
         Idempoten berdasarkan `versiProfil`: kirim ulang isi yang sama kembali `200` tanpa duplikat.
-        Versi lebih lama dari yang tersimpan → `409`. Perubahan profil membatalkan rekomendasi tersimpan dan memicu hitung ulang.
+        Versi lebih lama dari yang tersimpan → `409`; versi sama dengan isi berbeda → `409`. `versiProfil` dihilangkan: isi sama → `200` tanpa perubahan, isi beda → versi naik satu.
+        `jumlahJiwa` di luar 1–8 → `422 JIWA_DI_LUAR_RENTANG`. Penyimpanan pertama mengikat akun pemanggil ke `idKeluarga` (1 akun 1 keluarga, FR-301);
+        keluarga lain → `401`. Perubahan profil membatalkan rekomendasi tersimpan dan memicu hitung ulang (event `profil.disimpan`).
       parameters:
         - $ref: '#/components/parameters/KontrakVersi'
         - name: idKeluarga
@@ -395,7 +399,7 @@ paths:
       summary: Tandai dimasak (catat serapan G2)
       description: |
         Menulis `riwayat_masak`. Gram serapan dihitung server dari bahan terskala (`PorsiScaler`), bukan klaim pengguna.
-        Tanda ganda untuk resep dan hari yang sama dihitung sekali (kembali `200` dengan `duplikat: true`).
+        Tanda ganda untuk resep dan hari yang sama dihitung sekali (kembali `200` dengan `duplikat: true`). Keluarga harus sudah punya profil (`404 PROFIL_TIDAK_ADA`); `resepId` tidak sesuai pola `R-01`..`R-12` → `400`.
         Memicu event `resep.dimasak` dan `serapan.dihitung` (FSD 30).
       parameters:
         - $ref: '#/components/parameters/KontrakVersi'
@@ -940,6 +944,15 @@ components:
             kode: BATAS_LAJU
             pesan: Terlalu banyak permintaan.
             retrySetelahDetik: 60
+    JaringanGagal:
+      description: 502 — Pedaree tidak terjangkau dan tidak ada data stok tersimpan.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AppError'
+          example:
+            kode: JARINGAN_GAGAL
+            pesan: Pedaree tidak terjangkau.
     KesalahanServer:
       description: 500 — kesalahan server.
       content:
