@@ -60,6 +60,11 @@ fn dalam(nilai: &[String], sah: &[&str], bidang: &str, r: &mut Vec<Rinci>) {
     }
 }
 
+/// Batas atas bilangan bulat di badan permintaan (bilangan bulat aman JavaScript, 2^53-1).
+pub const MAKS_INTEGER: i64 = 9_007_199_254_740_991;
+/// `versi_profil` bertipe INTEGER di Postgres (32 bit).
+pub const MAKS_VERSI_PROFIL: i64 = 2_147_483_647;
+
 pub fn periksa_jiwa(jiwa: i64) -> AppResult<()> {
     if (1..=8).contains(&jiwa) {
         Ok(())
@@ -120,20 +125,23 @@ impl ProfilDto {
                 pesan: "format KEL-NNNN".into(),
             });
         }
-        if self.versi_profil.is_some_and(|v| v < 1) {
+        if self
+            .versi_profil
+            .is_some_and(|v| !(1..=MAKS_VERSI_PROFIL).contains(&v))
+        {
             r.push(Rinci {
                 bidang: "versiProfil".into(),
-                pesan: "minimal 1".into(),
+                pesan: format!("harus 1 sampai {MAKS_VERSI_PROFIL}"),
             });
         }
         if let Some(k) = &self.komposisi {
             if [k.dewasa, k.anak, k.balita, k.lansia]
                 .iter()
-                .any(|x| *x < 0)
+                .any(|x| !(0..=MAKS_INTEGER).contains(x))
             {
                 r.push(Rinci {
                     bidang: "komposisi".into(),
-                    pesan: "tidak boleh negatif".into(),
+                    pesan: format!("harus 0 sampai {MAKS_INTEGER}"),
                 });
             }
         }
@@ -148,10 +156,10 @@ impl ProfilDto {
                 &mut r,
             );
         }
-        if self.budget_per_makan < 0 {
+        if !(0..=MAKS_INTEGER).contains(&self.budget_per_makan) {
             r.push(Rinci {
                 bidang: "budgetPerMakan".into(),
-                pesan: "minimal 0".into(),
+                pesan: format!("harus 0 sampai {MAKS_INTEGER}"),
             });
         }
         if !(0..=3).contains(&self.level_pedas) {
@@ -208,10 +216,16 @@ impl StokItemDto {
                     pesan: "wajib diisi".into(),
                 });
             }
-            if s.gram < 0 {
+            if !(0..=MAKS_INTEGER).contains(&s.gram) {
                 r.push(Rinci {
                     bidang: format!("stok[{i}].gram"),
-                    pesan: "minimal 0".into(),
+                    pesan: format!("harus 0 sampai {MAKS_INTEGER}"),
+                });
+            }
+            if !(-MAKS_INTEGER..=MAKS_INTEGER).contains(&s.kedaluwarsa_hari) {
+                r.push(Rinci {
+                    bidang: format!("stok[{i}].kedaluwarsaHari"),
+                    pesan: format!("harus {} sampai {MAKS_INTEGER}", -MAKS_INTEGER),
                 });
             }
             if !KODE_GRADE.contains(&s.kode_grade.as_str()) {

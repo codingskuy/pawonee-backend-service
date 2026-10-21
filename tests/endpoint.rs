@@ -303,6 +303,47 @@ async fn put_profil_idempoten_tanpa_duplikat(pool: PgPool) {
     assert_eq!(st, StatusCode::CONFLICT);
 }
 
+/// Temuan Schemathesis: `versiProfil` di luar INTEGER 32 bit membuat 500; versi di batas lalu
+/// PUT tanpa versi meluap. Keduanya kini 400 / 409.
+#[sqlx::test(migrations = "./migrations")]
+async fn put_profil_versi_di_batas_integer_tidak_500(pool: PgPool) {
+    let a = app(pool);
+    let t = token(Some("KEL-0001"));
+    let uri = "/v1/profil/KEL-0001";
+    let (st, _, j) = kirim(
+        &a,
+        kirim_json(
+            "PUT",
+            uri,
+            &t,
+            profil("KEL-0001", Some(9_007_199_254_740_991)),
+        ),
+    )
+    .await;
+    assert_eq!(
+        (st, j["kode"].as_str()),
+        (StatusCode::BAD_REQUEST, Some("VALIDASI_GAGAL"))
+    );
+    let (st, _, _) = kirim(
+        &a,
+        kirim_json("PUT", uri, &t, profil("KEL-0001", Some(2_147_483_647))),
+    )
+    .await;
+    assert_eq!(st, StatusCode::OK);
+    let mut beda = profil("KEL-0001", None);
+    beda["budgetPerMakan"] = json!(40000);
+    let (st, _, j) = kirim(&a, kirim_json("PUT", uri, &t, beda)).await;
+    assert_eq!(
+        (st, j["kode"].as_str()),
+        (StatusCode::CONFLICT, Some("KONFLIK"))
+    );
+    // bilangan melebihi 2^53-1 pada badan lain ditolak 400
+    let mut besar = profil("KEL-0001", Some(2_147_483_647));
+    besar["budgetPerMakan"] = json!(9_007_199_254_740_992_i64);
+    let (st, _, _) = kirim(&a, kirim_json("PUT", uri, &t, besar)).await;
+    assert_eq!(st, StatusCode::BAD_REQUEST);
+}
+
 #[sqlx::test(migrations = "./migrations")]
 async fn put_profil_validasi_dan_hak_akses(pool: PgPool) {
     let a = app(pool);

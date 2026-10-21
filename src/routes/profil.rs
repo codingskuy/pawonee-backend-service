@@ -157,6 +157,12 @@ pub async fn simpan(
                 }
                 _ => {}
             }
+            if masuk.versi_profil.is_none() && versi_tersimpan >= crate::dto::MAKS_VERSI_PROFIL {
+                // Kolom INTEGER 32 bit: versi berikutnya akan meluap (dulu 500).
+                return Err(AppError::Konflik(
+                    "Versi profil sudah mencapai batas tertinggi.".into(),
+                ));
+            }
             baru_versi = masuk.versi_profil.unwrap_or(versi_tersimpan + 1);
             let m = masuk.clone().normal();
             sqlx::query(
