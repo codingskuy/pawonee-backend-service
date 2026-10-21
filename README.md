@@ -34,6 +34,15 @@ cargo run
 
 Atau via compose di `pawonee-infra-devops` (layanan `db` + `backend`).
 
+## Uji kontrak konsumen (Pact)
+
+```bash
+export DATABASE_URL=postgres://postgres@localhost:5432/pawonee_pact   # database sekali pakai
+RESET_DB=1 scripts/uji-pact.sh      # butuh cargo, curl, psql, python3
+```
+
+Verifikasi provider memakai `pact_verifier_cli` (Rust, dipin 1.3.5, sha256 diperiksa) terhadap berkas di [`pacts/`](pacts/README.md). Berkas saat ini adalah CONTOH (pact konsumen asli belum ada); cara menggantinya ada di `pacts/README.md`. Keputusan: [ADR-0003](docs/decisions/ADR-0003-pact-verifikasi-provider.md).
+
 ## Repo terkait
 
 - [pawonee-app-kmp](https://github.com/Coding-Skuy/pawonee-app-kmp) (pemilik `:shared:pantry-resep`)
