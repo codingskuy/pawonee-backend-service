@@ -4,6 +4,14 @@ use crate::{auth::sandi, AppError, AppResult};
 use chrono::{DateTime, Duration, Utc};
 use sqlx::PgPool;
 
+/// (hash_pin, pin_diganti_pada, pin_gagal, pin_terkunci_hingga)
+type BarisPin = (
+    Option<String>,
+    Option<DateTime<Utc>>,
+    i16,
+    Option<DateTime<Utc>>,
+);
+
 pub const MAKS_SALAH: i16 = 3;
 pub const KUNCI_MENIT: i64 = 15;
 pub const GANTI_HARI: i64 = 90;
@@ -51,7 +59,7 @@ pub async fn verifikasi(
     pin: &str,
     sekarang: DateTime<Utc>,
 ) -> AppResult<()> {
-    let baris: Option<(Option<String>, Option<DateTime<Utc>>, i16, Option<DateTime<Utc>>)> = sqlx::query_as(
+    let baris: Option<BarisPin> = sqlx::query_as(
         "SELECT hash_pin, pin_diganti_pada, pin_gagal, pin_terkunci_hingga FROM pengguna WHERE id_pengguna = $1",
     )
     .bind(id_pengguna)
