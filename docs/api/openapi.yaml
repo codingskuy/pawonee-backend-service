@@ -23,7 +23,7 @@ info:
 servers:
   - url: https://api.pawonee.chefgenie.id/v1
     description: Produksi (placeholder resmi)
-  - url: http://localhost:8080
+  - url: http://localhost:8080/v1
     description: Pengembangan lokal
 tags:
   - name: Kesehatan
