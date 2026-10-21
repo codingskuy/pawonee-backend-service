@@ -97,6 +97,22 @@ async fn login_gagal_sandi_salah_pengguna_tak_ada_dan_validasi(pool: PgPool) {
     );
 }
 
+/// Temuan Schemathesis: karakter NUL pada `idPengguna` membuat Postgres menolak (500). Harus 400.
+#[sqlx::test(migrations = "./migrations")]
+async fn login_menolak_karakter_nul_dengan_400_bukan_500(pool: PgPool) {
+    let app = routes::router(AppState::baru(pool, R), 5);
+    for badan in [
+        json!({"idPengguna":"\u{0}\u{9f}\u{9f}","kataSandi":"x"}),
+        json!({"idPengguna":"ibu-sari","kataSandi":"x","idPerangkat":"hp\u{0}"}),
+    ] {
+        let (st, j) = kirim(app.clone(), post("/v1/auth/login", badan)).await;
+        assert_eq!(
+            (st, j["kode"].as_str()),
+            (StatusCode::BAD_REQUEST, Some("VALIDASI_GAGAL"))
+        );
+    }
+}
+
 #[sqlx::test(migrations = "./migrations")]
 async fn refresh_sekali_pakai_dan_reuse_mencabut_seluruh_keluarga(pool: PgPool) {
     buat_pengguna(&pool, "ibu-sari", "sandi-kuat-1", None).await;

@@ -41,20 +41,29 @@ pub async fn login(
     State(s): State<AppState>,
     JsonValid(m): JsonValid<Login>,
 ) -> AppResult<Json<Data<refresh::TokenPasangan>>> {
-    if m.id_pengguna.trim().is_empty() || m.id_pengguna.len() > 128 {
+    if m.id_pengguna.trim().is_empty()
+        || m.id_pengguna.chars().count() > 128
+        || m.id_pengguna.contains('\0')
+    {
         return Err(AppError::validasi(
             "idPengguna",
-            "wajib diisi (maks 128 karakter)",
+            "wajib diisi (maks 128 karakter, tanpa karakter NUL)",
         ));
     }
-    if m.kata_sandi.is_empty() || m.kata_sandi.len() > 256 {
+    if m.kata_sandi.is_empty() || m.kata_sandi.chars().count() > 256 {
         return Err(AppError::validasi(
             "kataSandi",
             "wajib diisi (maks 256 karakter)",
         ));
     }
-    if m.id_perangkat.as_deref().is_some_and(|p| p.len() > 128) {
-        return Err(AppError::validasi("idPerangkat", "maksimal 128 karakter"));
+    if m.id_perangkat
+        .as_deref()
+        .is_some_and(|p| p.chars().count() > 128 || p.contains('\0'))
+    {
+        return Err(AppError::validasi(
+            "idPerangkat",
+            "maksimal 128 karakter, tanpa karakter NUL",
+        ));
     }
     if !s.pembatas.periksa(&format!("login:{}", m.id_pengguna)) {
         return Err(AppError::BatasLaju);
@@ -89,7 +98,7 @@ pub async fn refresh(
     State(s): State<AppState>,
     JsonValid(m): JsonValid<Refresh>,
 ) -> AppResult<Json<Data<refresh::TokenPasangan>>> {
-    if m.refresh_token.is_empty() || m.refresh_token.len() > 256 {
+    if m.refresh_token.is_empty() || m.refresh_token.chars().count() > 256 {
         return Err(AppError::validasi("refreshToken", "wajib diisi"));
     }
     if !s.pembatas.periksa(&format!(
