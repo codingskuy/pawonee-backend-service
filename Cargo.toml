@@ -4,13 +4,27 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.82.0"
 
+[lib]
+name = "pawonee"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pawonee-backend-service"
+path = "src/main.rs"
+
 [dependencies]
 axum = { version = "=0.8.1", features = ["json"] }
 tokio = { version = "=1.42.0", features = ["full"] }
-sqlx = { version = "=0.8.2", features = ["postgres", "runtime-tokio", "migrate"] }
+sqlx = { version = "=0.8.2", features = ["postgres", "runtime-tokio", "migrate", "macros", "uuid", "chrono", "json"] }
 serde = { version = "=1.0.215", features = ["derive"] }
 serde_json = { version = "=1.0.133" }
-tower-http = { version = "0.6.1", features = ["cors"] }
+tower-http = { version = "0.6.1", features = ["cors", "trace", "timeout"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v7", "serde"] }
+validator = { version = "0.19", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
 
 [dev-dependencies]
-axum-test = "16.0.0"
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"

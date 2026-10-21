@@ -1,36 +1,28 @@
-//! Pawonee backend: API resep + preferensi di atas database `pawonee`.
-//! Selaras dengan modul `:shared:pantry-resep` milik Pawonee.
-
-mod preferensi;
-mod resep;
-
-use axum::{routing::get, Json, Router};
-use serde::Serialize;
-use std::net::SocketAddr;
-
-#[derive(Serialize)]
-struct Kesehatan {
-    status: &'static str,
-}
-
-async fn kesehatan() -> Json<Kesehatan> {
-    Json(Kesehatan { status: "ok" })
-}
+use pawonee::{config::Config, db, routes, AppState};
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new()
-        .route("/kesehatan", get(kesehatan))
-        .route(
-            "/v1/resep/rekomendasi",
-            get(resep::rekomendasi),
-        )
-        .route(
-            "/v1/preferensi/:id",
-            get(preferensi::baca).put(preferensi::simpan),
-        );
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        .init();
 
-    let alamat = SocketAddr::from(([0, 0, 0, 0], 8080));
-    let pendengar = tokio::net::TcpListener::bind(alamat).await.unwrap();
-    axum::serve(pendengar, app).await.unwrap();
+    let cfg = match Config::dari_env() {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::error!("{e}");
+            std::process::exit(1);
+        }
+    };
+    let pool = db::sambung(&cfg.database_url)
+        .await
+        .expect("koneksi database pawonee gagal");
+    db::migrasi(&pool).await.expect("migrasi gagal");
+
+    let app = routes::router(AppState::baru(pool), cfg.timeout_detik);
+    let pendengar = tokio::net::TcpListener::bind(cfg.alamat)
+        .await
+        .expect("bind gagal");
+    tracing::info!(alamat = %cfg.alamat, "pawonee berjalan");
+    axum::serve(pendengar, app).await.expect("server berhenti");
 }
