@@ -34,6 +34,15 @@ cargo run
 
 Atau via compose di `pawonee-infra-devops` (layanan `db` + `backend`).
 
+## Uji properti (Schemathesis)
+
+```bash
+export DATABASE_URL=postgres://postgres@localhost:5432/pawonee_st   # database sekali pakai
+RESET_DB=1 scripts/uji-schemathesis.sh      # butuh python3, cargo, psql, curl
+```
+
+Menyalakan backend + Pedaree palsu lokal, menjalankan Schemathesis terhadap `docs/api/openapi.yaml`, lalu mematikannya (telemetry mati). Laporan JUnit di `target/schemathesis/`. Opsi: `MAKS_CONTOH`, `FASE`, `PORT`, `ST_ARGS`. CI: workflow manual `Schemathesis (manual)`. Keputusan: [ADR-0002](docs/decisions/ADR-0002-schemathesis-uji-properti.md).
+
 ## Repo terkait
 
 - [pawonee-app-kmp](https://github.com/Coding-Skuy/pawonee-app-kmp) (pemilik `:shared:pantry-resep`)
