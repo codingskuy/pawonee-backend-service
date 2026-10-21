@@ -1,0 +1,282 @@
+{
+  "consumer": {
+    "name": "pawonee-app-kmp-CONTOH"
+  },
+  "provider": {
+    "name": "pawonee-backend-service"
+  },
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    },
+    "pawonee": {
+      "contoh": true,
+      "catatan": "CONTOH disusun dari openapi.yaml; bukan pact konsumen asli (belum ada di repo konsumen)."
+    }
+  },
+  "interactions": [
+    {
+      "description": "rekomendasi dengan stok kosong memakai mode hemat",
+      "providerStates": [
+        {
+          "name": "bank resep tersedia"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/v1/rekomendasi",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "profil": {
+            "idKeluarga": "KEL-0001",
+            "jumlahJiwa": 4,
+            "alergi": [],
+            "pantangan": [
+              "halal-selalu"
+            ],
+            "budgetPerMakan": 35000,
+            "levelPedas": 1,
+            "alatMasak": [
+              "kompor",
+              "wajan",
+              "panci",
+              "kukusan"
+            ]
+          },
+          "stok": [],
+          "jiwa": 4,
+          "waktuMaksimalMenit": 30
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "data": [
+            {
+              "resep": {
+                "id": "R-01"
+              },
+              "skorTotal": 50.0,
+              "alasan": "contoh",
+              "bahanTerskala": [],
+              "belanjaTambahan": []
+            }
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.data": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1,
+                  "max": 5
+                }
+              ]
+            },
+            "$.data[*].resep.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "^R-(0[1-9]|1[0-2])$"
+                }
+              ]
+            },
+            "$.data[*].skorTotal": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].alasan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].bahanTerskala": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].belanjaTambahan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "tandai dimasak mencatat serapan G2",
+      "providerStates": [
+        {
+          "name": "keluarga KEL-0001 punya profil dan belum memasak R-06"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/v1/riwayat-masak",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "idKeluarga": "KEL-0001",
+          "resepId": "R-06",
+          "jiwa": 4,
+          "tanggal": "2026-10-20"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "data": {
+            "resepId": "R-06",
+            "jiwa": 4,
+            "gramG2Terserap": 420,
+            "tanggal": "2026-10-20"
+          }
+        },
+        "matchingRules": {
+          "body": {
+            "$.data.gramG2Terserap": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "tandai dimasak tanpa profil 404",
+      "providerStates": [
+        {
+          "name": "keluarga KEL-0001 belum punya profil"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/v1/riwayat-masak",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "idKeluarga": "KEL-0001",
+          "resepId": "R-06",
+          "jiwa": 4,
+          "tanggal": "2026-10-20"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "kode": "PROFIL_TIDAK_ADA",
+          "pesan": "contoh"
+        },
+        "matchingRules": {
+          "body": {
+            "$.pesan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "ringkasan riwayat mingguan",
+      "providerStates": [
+        {
+          "name": "keluarga KEL-0001 punya profil dan belum memasak R-06"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/v1/riwayat-masak",
+        "query": {
+          "idKeluarga": [
+            "KEL-0001"
+          ]
+        },
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "data": {
+            "riwayat": [],
+            "serapanMingguan": []
+          }
+        },
+        "matchingRules": {
+          "body": {
+            "$.data.riwayat": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.serapanMingguan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

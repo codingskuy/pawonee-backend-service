@@ -1,0 +1,58 @@
+{
+  "consumer": {
+    "name": "pawonee-app-kmp-CONTOH"
+  },
+  "provider": {
+    "name": "pawonee-backend-service"
+  },
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    },
+    "pawonee": {
+      "contoh": true,
+      "catatan": "CONTOH disusun dari openapi.yaml; bukan pact konsumen asli (belum ada di repo konsumen)."
+    }
+  },
+  "interactions": [
+    {
+      "description": "login pengguna tak dikenal 401",
+      "providerStates": [],
+      "request": {
+        "method": "POST",
+        "path": "/v1/auth/login",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "idPengguna": "hantu",
+          "kataSandi": "salah"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "kode": "TIDAK_TEROTENTIKASI",
+          "pesan": "contoh"
+        },
+        "matchingRules": {
+          "body": {
+            "$.pesan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

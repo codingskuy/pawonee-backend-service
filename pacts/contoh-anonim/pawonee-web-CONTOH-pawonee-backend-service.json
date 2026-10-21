@@ -1,0 +1,53 @@
+{
+  "consumer": {
+    "name": "pawonee-web-CONTOH"
+  },
+  "provider": {
+    "name": "pawonee-backend-service"
+  },
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    },
+    "pawonee": {
+      "contoh": true,
+      "catatan": "CONTOH disusun dari openapi.yaml; bukan pact konsumen asli (belum ada di repo konsumen)."
+    }
+  },
+  "interactions": [
+    {
+      "description": "tanpa kredensial ditolak 401",
+      "providerStates": [],
+      "request": {
+        "method": "GET",
+        "path": "/v1/resep",
+        "headers": {
+          "X-Kontrak-Versi": "v1"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "kode": "TIDAK_TEROTENTIKASI",
+          "pesan": "contoh"
+        },
+        "matchingRules": {
+          "body": {
+            "$.pesan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

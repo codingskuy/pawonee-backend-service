@@ -1,0 +1,306 @@
+{
+  "consumer": {
+    "name": "pawonee-web-CONTOH"
+  },
+  "provider": {
+    "name": "pawonee-backend-service"
+  },
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    },
+    "pawonee": {
+      "contoh": true,
+      "catatan": "CONTOH disusun dari openapi.yaml; bukan pact konsumen asli (belum ada di repo konsumen)."
+    }
+  },
+  "interactions": [
+    {
+      "description": "daftar 12 resep bank",
+      "providerStates": [
+        {
+          "name": "bank resep tersedia"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/v1/resep",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1",
+          "Cache-Control": "public, max-age=604800"
+        },
+        "body": {
+          "data": [
+            {
+              "id": "R-01",
+              "nama": "Tempe Tumis Bawang",
+              "kelompok": "tumis",
+              "waktuMenit": 15
+            }
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.data": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 12
+                }
+              ]
+            },
+            "$.data[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "^R-(0[1-9]|1[0-2])$"
+                }
+              ]
+            },
+            "$.data[*].nama": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].waktuMenit": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "detail resep R-01 untuk 4 jiwa",
+      "providerStates": [
+        {
+          "name": "bank resep tersedia"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/v1/resep/R-01",
+        "query": {
+          "jiwa": [
+            "4"
+          ]
+        },
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1",
+          "Cache-Control": "public, max-age=86400"
+        },
+        "body": {
+          "data": {
+            "resep": {
+              "id": "R-01",
+              "nama": "Tempe Tumis Bawang"
+            },
+            "skorTotal": 50.0,
+            "alasan": "contoh",
+            "bahanTerskala": [],
+            "belanjaTambahan": []
+          }
+        },
+        "matchingRules": {
+          "body": {
+            "$.data.resep.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "^R-01$"
+                }
+              ]
+            },
+            "$.data.resep.nama": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.skorTotal": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.alasan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.bahanTerskala": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "resep tidak ada",
+      "providerStates": [
+        {
+          "name": "bank resep tersedia"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/v1/resep/R-99",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "kode": "RESEP_TIDAK_ADA",
+          "pesan": "contoh"
+        },
+        "matchingRules": {
+          "body": {
+            "$.pesan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "jiwa di luar rentang",
+      "providerStates": [
+        {
+          "name": "bank resep tersedia"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/v1/resep/R-01",
+        "query": {
+          "jiwa": [
+            "9"
+          ]
+        },
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "kode": "JIWA_DI_LUAR_RENTANG",
+          "pesan": "contoh"
+        },
+        "matchingRules": {
+          "body": {
+            "$.pesan": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "simpan profil keluarga baru",
+      "providerStates": [
+        {
+          "name": "keluarga KEL-0001 belum punya profil"
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "path": "/v1/profil/KEL-0001",
+        "headers": {
+          "X-Kontrak-Versi": "v1",
+          "Authorization": "Bearer token-contoh",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "idKeluarga": "KEL-0001",
+          "jumlahJiwa": 4,
+          "alergi": [],
+          "pantangan": [
+            "halal-selalu"
+          ],
+          "budgetPerMakan": 35000,
+          "levelPedas": 1,
+          "alatMasak": [
+            "kompor",
+            "wajan",
+            "panci",
+            "kukusan"
+          ],
+          "versiProfil": 1
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Kontrak-Versi": "v1"
+        },
+        "body": {
+          "data": {
+            "tersimpan": true
+          }
+        }
+      }
+    }
+  ]
+}
