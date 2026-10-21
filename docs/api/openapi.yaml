@@ -61,6 +61,8 @@ paths:
               example:
                 status: baik
                 kontrakVersi: v1
+        '400':
+          $ref: '#/components/responses/Validasi'
         '500':
           $ref: '#/components/responses/KesalahanServer'
   /auth/login:
@@ -120,6 +122,8 @@ paths:
               properties:
                 refreshToken:
                   type: string
+                  minLength: 1
+                  maxLength: 256
       responses:
         '200':
           description: Pasangan token baru.
@@ -172,6 +176,8 @@ paths:
                     maxItems: 12
                     items:
                       $ref: '#/components/schemas/Resep'
+        '400':
+          $ref: '#/components/responses/Validasi'
         '401':
           $ref: '#/components/responses/TidakTerotentikasi'
         '429':
@@ -637,11 +643,17 @@ components:
       properties:
         namaBahan:
           type: string
+          minLength: 1
+          pattern: '\S'
+          description: Wajib diisi, bukan hanya spasi.
         gram:
           type: integer
           minimum: 0
+          maximum: 9007199254740991
         kedaluwarsaHari:
           type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
           description: Sisa hari sebelum kedaluwarsa. G2-S dengan nilai ≤2 mendapat bonus skor +5.
         kodeGrade:
           $ref: '#/components/schemas/KodeGrade'
@@ -652,29 +664,34 @@ components:
         idKeluarga:
           $ref: '#/components/schemas/IdKeluarga'
         versiProfil:
-          type: integer
+          type: [integer, 'null']
           minimum: 1
-          description: Versi profil untuk idempotensi `PUT`.
+          maximum: 2147483647
+          description: Versi profil untuk idempotensi `PUT`. `null` diperlakukan sama dengan dihilangkan.
         jumlahJiwa:
           type: integer
           minimum: 1
           maximum: 8
         komposisi:
-          type: object
+          type: [object, 'null']
           description: Komposisi jiwa; balita dihitung 0,6 jiwa untuk sayur.
           properties:
             dewasa:
               type: integer
               minimum: 0
+              maximum: 9007199254740991
             anak:
               type: integer
               minimum: 0
+              maximum: 9007199254740991
             balita:
               type: integer
               minimum: 0
+              maximum: 9007199254740991
             lansia:
               type: integer
               minimum: 0
+              maximum: 9007199254740991
         alergi:
           type: array
           items:
@@ -686,6 +703,7 @@ components:
         budgetPerMakan:
           type: integer
           minimum: 0
+          maximum: 9007199254740991
           description: Rupiah (IDR, integer). Bawaan keluarga baru 35000.
         levelPedas:
           type: integer
@@ -696,7 +714,10 @@ components:
           items:
             $ref: '#/components/schemas/AlatMasak'
         sumberBelanja:
-          $ref: '#/components/schemas/SumberBelanja'
+          description: Opsional; `null` atau dihilangkan berarti `campuran`.
+          anyOf:
+            - $ref: '#/components/schemas/SumberBelanja'
+            - type: 'null'
     BahanTerskala:
       type: object
       required: [namaBahan, gram]
@@ -744,7 +765,7 @@ components:
             $ref: '#/components/schemas/BelanjaItem'
     RekomendasiRequest:
       type: object
-      required: [profil, stok, jiwa, waktuMaksimalMenit]
+      required: [profil, stok, jiwa]
       properties:
         profil:
           $ref: '#/components/schemas/ProfilKeluarga'
@@ -761,6 +782,7 @@ components:
           minimum: 10
           maximum: 45
           default: 30
+          description: Opsional; bawaan 30 menit.
     RiwayatMasak:
       type: object
       required: [resepId, jiwa, gramG2Terserap, tanggal]
@@ -809,12 +831,20 @@ components:
       properties:
         idPengguna:
           type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[^\u0000]*\S[^\u0000]*$'
+          description: Wajib diisi, bukan hanya spasi, tanpa karakter NUL, maksimal 128 karakter (selainnya `400 VALIDASI_GAGAL`).
         kataSandi:
           type: string
           format: password
           writeOnly: true
+          minLength: 1
+          maxLength: 256
         idPerangkat:
           type: string
+          maxLength: 128
+          pattern: '^[^\u0000]*$'
           description: Id perangkat terdaftar (opsional, untuk pencatatan).
     TokenPasangan:
       type: object
